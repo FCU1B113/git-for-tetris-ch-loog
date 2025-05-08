@@ -283,6 +283,23 @@ bool move(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], int originalX, int original
 
     return true;
 }
+int clearLine(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH])
+{
+    for (int i = 0; i < CANVAS_HEIGHT; i++)
+    {
+        for (int j = 0; j < CANVAS_WIDTH; j++)
+        {
+            if (canvas[i][j].current)
+            {
+                canvas[i][j].current = false;
+            }
+        }
+    }
+
+    int linesCleared = 0;
+    /*....日後會再更新*/
+    return linesCleared;
+}
 
 void logic(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], State* state)
 {
