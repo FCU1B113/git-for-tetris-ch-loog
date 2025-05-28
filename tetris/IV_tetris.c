@@ -47,6 +47,7 @@ typedef enum
     O,
     S,
     T,
+    U,
     Z
 } ShapeId;
 
@@ -75,7 +76,7 @@ typedef struct
     bool current;
 } Block;
 
-Shape shapes[7] = {
+Shape shapes[8] = {
     {.shape = I,
      .color = CYAN,
      .size = 4,
@@ -179,6 +180,23 @@ Shape shapes[7] = {
              {{0, 1, 0},
               {1, 1, 0},
               {0, 1, 0}}}},
+    { .shape = U,
+     .color = RED,
+     .size = 3,
+     .rotates =
+         {
+             {{1, 0, 1},
+              {1, 1, 1},
+              {0, 0, 0}},
+             {{0, 1, 1},
+              {0, 1, 0},
+              {0, 1, 1}},
+             {{0, 0, 0},
+              {1, 1, 1},
+              {1, 0, 1}},
+             {{1, 1, 0},
+              {0, 1, 0},
+              {1, 1, 0}}} },
     {.shape = Z,
      .color = RED,
      .size = 3,
@@ -212,9 +230,20 @@ void resetBlock(Block* block)
     block->current = false;
 }
 
-void printCanvas(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], State* state)
+
+
+void printCanvas(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], State* state, clock_t startTime)
 {
+
     printf("\033[0;0H\n");
+    //顯示Score
+    printf("\033[%d;%dHScore: %d", 2, CANVAS_WIDTH * 2 + 5, state->score);
+
+    //顯示Time
+    int elapsedSeconds = (clock() - startTime) / CLOCKS_PER_SEC;
+    printf("\033[%d;%dHTime: %02d:%02d", 3, CANVAS_WIDTH * 2 + 5, elapsedSeconds / 60, elapsedSeconds % 60);
+
+
     for (int i = 0; i < CANVAS_HEIGHT; i++)
     {
         printf("|");
@@ -226,7 +255,7 @@ void printCanvas(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], State* state)
     }
 
     // 輸出Next:
-    printf("\033[%d;%dHNext:", 3, CANVAS_WIDTH * 2 + 5);
+    printf("\033[%d;%dHNext:", 4, CANVAS_WIDTH * 2 + 5);
     // 輸出有甚麼方塊
     for (int i = 1; i <= 3; i++)
     {
@@ -343,7 +372,16 @@ int clearLine(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH])
     }
     return linesCleared;
 }
-
+//分數計算
+int calcScore(int linesCleared){
+    switch(linesCleared){
+    case 1: return 10;
+    case 2: return 30;
+    case 3: return 60;
+    case 4: return 100;
+    default: return 0;
+    }
+}
 
 void logic(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], State* state)
 {
@@ -389,6 +427,10 @@ void logic(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], State* state)
         }
         else
         {
+            //分數計算
+            int lines = clearLine(canvas);
+            state->score += calcScore(lines);
+
             state->score += clearLine(canvas);
 
             state->x = CANVAS_WIDTH / 2;
@@ -398,7 +440,7 @@ void logic(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], State* state)
             state->queue[0] = state->queue[1];
             state->queue[1] = state->queue[2];
             state->queue[2] = state->queue[3];
-            state->queue[3] = rand() % 7;
+            state->queue[3] = rand() % 8 ;
 
             //結束輸出
             if (!move(canvas, state->x, state->y, state->rotate, state->x, state->y, state->rotate, state->queue[0]))
@@ -413,6 +455,7 @@ void logic(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], State* state)
 
 int main()
 {
+    clock_t startTime = clock();
     srand(time(NULL));
     State state = {
         .x = CANVAS_WIDTH / 2,
@@ -423,7 +466,7 @@ int main()
 
     for (int i = 0; i < 4; i++)
     {
-        state.queue[i] = rand() % 7;
+        state.queue[i] = rand() % 8;
     }
 
     Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH];
@@ -450,7 +493,7 @@ int main()
 
     while (1)
     {
-        printCanvas(canvas, &state);
+        printCanvas(canvas, &state, startTime);
         logic(canvas, &state);
         Sleep(100);
     }
